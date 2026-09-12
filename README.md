@@ -1,4 +1,3 @@
-````markdown
 # SimpleStorage dApp
 
 ![SimpleStorage frontend](docs/image.png)
@@ -28,6 +27,7 @@ frontend/        Browser UI
   index.html
 hardhat.config.ts
 ```
+
 ````
 
 ## Run Locally
@@ -93,3 +93,4 @@ Author
 Petrus Mgbebu
 - GitHub: [@Petrusmgbebu](https://github.com/Petrusmgbebu)
 ```
+````

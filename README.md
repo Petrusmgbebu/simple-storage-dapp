@@ -15,40 +15,33 @@ Built to learn the complete Web3 development loop: **write → compile → test 
 
 ## Structure
 
-```text
-contracts/       Solidity source code
-  SimpleStorage.sol
-test/            Solidity tests (incl. a fuzz test)
-  SimpleStorage.t.sol
-scripts/         Deploy & interaction scripts
-  deploy.ts
-  interact.ts
-frontend/        Browser UI
-  index.html
+contracts/ Solidity source code
+SimpleStorage.sol
+test/ Solidity tests (incl. a fuzz test)
+SimpleStorage.t.sol
+scripts/ Deploy & interaction scripts
+deploy.ts
+interact.ts
+frontend/ Browser UI
+index.html
 hardhat.config.ts
-```
 
-````
-
-## Run Locally
+Run Locally
 
 **1. Install dependencies**
 
-```bash
+bash
 npm install
-```
 
 **2. Start a local blockchain** (keep this terminal open)
 
-```bash
+bash
 npx hardhat node
-```
 
 **3. In a second terminal, deploy the contract**
 
-```bash
+bash
 npx hardhat run scripts/deploy.ts --network localhost
-```
 
 Copy the printed `CONTRACT_ADDRESS`.
 
@@ -65,9 +58,8 @@ Type a number, click **Set**, and watch the value change — powered by a real b
 
 ## Run Tests
 
-```bash
+bash
 npx hardhat test
-```
 
 You'll see tests for initial state, set/get, overwrite, and a fuzz test that runs with 256 random inputs.
 
@@ -84,13 +76,7 @@ You'll see tests for initial state, set/get, overwrite, and a fuzz test that run
 
 MIT
 
-```
-
-
-
-
 Author
 Petrus Mgbebu
+
 - GitHub: [@Petrusmgbebu](https://github.com/Petrusmgbebu)
-```
-````

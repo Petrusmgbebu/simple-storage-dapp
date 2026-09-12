@@ -1,57 +1,94 @@
-# Sample Hardhat 3 Project (`mocha` and `ethers`)
+````markdown
+# SimpleStorage dApp
 
-This project showcases a Hardhat 3 project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+A beginner-friendly full-stack Solidity project — a smart contract that stores a number, complete with tests, a deploy script, and a browser-based frontend.
 
-To learn more about Hardhat 3, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3](https://hardhat.org/hardhat3-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+Built to learn the complete Web3 development loop: **write → compile → test → deploy → interact**.
 
-## Project Overview
+## Stack
 
-This example project includes:
+- **Solidity** `^0.8.0` — the smart contract
+- **Hardhat 3** — compile, test, and run
+- **ethers.js v6** — talk to the contract from JavaScript
+- **Vanilla HTML/CSS/JS** — no framework, just the essentials
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+## Structure
 
-## Usage
+```text
+contracts/       Solidity source code
+  SimpleStorage.sol
+test/            Solidity tests (incl. a fuzz test)
+  SimpleStorage.t.sol
+scripts/         Deploy & interaction scripts
+  deploy.ts
+  interact.ts
+frontend/        Browser UI
+  index.html
+hardhat.config.ts
+```
+````
 
-### Running Tests
+## Run Locally
 
-To run all the tests in the project, execute the following command:
+**1. Install dependencies**
 
-```shell
+```bash
+npm install
+```
+
+**2. Start a local blockchain** (keep this terminal open)
+
+```bash
+npx hardhat node
+```
+
+**3. In a second terminal, deploy the contract**
+
+```bash
+npx hardhat run scripts/deploy.ts --network localhost
+```
+
+Copy the printed `CONTRACT_ADDRESS`.
+
+**4. Configure the frontend**
+Open `frontend/index.html` and paste:
+
+- The `CONTRACT_ADDRESS` you just copied.
+- The `PRIVATE_KEY` of **Account #0** from the `npx hardhat node` output.
+  _(Note: This is a publicly known, fake test key. Never use a real private key in frontend code.)_
+
+**5. Open `frontend/index.html` in your browser**
+
+Type a number, click **Set**, and watch the value change — powered by a real blockchain transaction.
+
+## Run Tests
+
+```bash
 npx hardhat test
 ```
 
-You can also selectively run the Solidity or `mocha` tests:
+You'll see tests for initial state, set/get, overwrite, and a fuzz test that runs with 256 random inputs.
 
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
-```
+## Lesson
 
-### Make a deployment to Sepolia
+- Writing and structuring a Solidity contract
+- The difference between **transactions** (write, cost gas, async) and **calls** (read, free, instant)
+- Testing with `require` and fuzz tests
+- Deploying to a local node
+- Connecting a frontend to a contract with ethers.js
+- How `msg.sender`, state variables, and events work
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+## License
 
-To run the deployment to a local chain:
+MIT
 
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
+````
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+---
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
-
-After setting the variable, you can run the deployment with the Sepolia network:
-
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+```markdown
+## 👤 Author
+**Petrus Mgbebu**
+- GitHub: [@Petrusmgbebu](https://github.com/Petrusmgbebu)
+````

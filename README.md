@@ -1,6 +1,8 @@
 ````markdown
 # SimpleStorage dApp
 
+![SimpleStorage frontend](docs/image.png)
+
 A beginner-friendly full-stack Solidity project — a smart contract that stores a number, complete with tests, a deploy script, and a browser-based frontend.
 
 Built to learn the complete Web3 development loop: **write → compile → test → deploy → interact**.

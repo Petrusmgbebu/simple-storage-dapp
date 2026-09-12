@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Impact Passport</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 760px;
+        margin: 40px auto;
+        padding: 0 20px;
+        background: #fafbfd;
+        color: #1a1a1a;
+      }
+      h1 {
+        margin-bottom: 4px;
+      }
+      .subtitle {
+        color: #666;
+        margin-top: 0;
+      }
+      .card {
+        background: white;
+        border: 1px solid #e1e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 16px 0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      }
+      .card h2 {
+        margin-top: 0;
+        font-size: 20px;
+      }
+      button {
+        padding: 9px 16px;
+        font-size: 15px;
+        cursor: pointer;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        margin-right: 8px;
+      }
+      button:hover {
+        background: #0055aa;
+      }
+      button:disabled {
+        background: #999;
+        cursor: wait;
+      }
+      input {
+        padding: 9px 12px;
+        font-size: 15px;
+        border: 1px solid #ccd;
+        border-radius: 6px;
+        margin-right: 8px;
+      }
+      #status {
+        padding: 10px 14px;
+        border-radius: 6px;
+        background: #fff8e1;
+        color: #7a5c00;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+      #status.ok {
+        background: #e6f7e6;
+        color: #1f6f1f;
+      }
+      #status.err {
+        background: #fdeaea;
+        color: #8a1f1f;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      li {
+        margin: 6px 0;
+      }
+      .stat {
+        display: inline-block;
+        margin-right: 28px;
+        margin-top: 8px;
+      }
+      .stat-label {
+        font-size: 12px;
+        color: #777;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .stat-value {
+        font-size: 26px;
+        font-weight: 700;
+        color: #0066cc;
+        font-variant-numeric: tabular-nums;
+      }
+      #log {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 12px;
+        background: #1a1a1a;
+        color: #7ee787;
+        padding: 12px;
+        border-radius: 6px;
+        height: 150px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+      .hint {
+        font-size: 12px;
+        color: #888;
+        margin-top: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🌍 Impact Passport</h1>
+    <p class="subtitle">Education. Health. Finance. One identity.</p>
+
+    <div id="status">Connecting…</div>
+
+    <!-- Registration -->
+    <div class="card" id="registerCard">
+      <h2>Register</h2>
+      <p class="hint">Create your passport on-chain.</p>
+      <input id="nameInput" placeholder="Your name" />
+      <button onclick="register()">Register</button>
+    </div>
+
+    <!-- Profile summary -->
+    <div class="card" id="profileCard" style="display: none">
+      <h2>Hello, <span id="userName">—</span></h2>
+      <div class="stat">
+        <div class="stat-label">Education points</div>
+        <div class="stat-value" id="eduPoints">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Health points</div>
+        <div class="stat-value" id="healthPoints">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Credit score</div>
+        <div class="stat-value" id="creditScore">0</div>
+      </div>
+    </div>
+
+    <!-- Education -->
+    <div class="card" id="eduCard" style="display: none">
+      <h2>📚 Education</h2>
+      <p class="hint">
+        In production, only verified teachers issue certificates.
+      </p>
+      <input
+        id="courseInput"
+        placeholder="Course name (e.g. Blockchain Basics)"
+      />
+      <button onclick="issueCertificate()">Add Certificate</button>
+      <ul id="certList"></ul>
+    </div>
+
+    <!-- Health -->
+    <div class="card" id="healthCard" style="display: none">
+      <h2>🏥 Healthcare</h2>
+      <p class="hint">
+        In production, only verified clinics issue attestations.
+      </p>
+      <input id="healthInput" placeholder="Kind (e.g. checkup, vaccination)" />
+      <button onclick="attestHealth()">Add Attestation</button>
+      <ul id="attestationList"></ul>
+    </div>
+
+    <!-- Finance -->
+    <div class="card" id="financeCard" style="display: none">
+      <h2>💰 Finance</h2>
+      <div class="stat">
+        <div class="stat-label">Loan limit</div>
+        <div class="stat-value" id="loanLimit">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Borrowed</div>
+        <div class="stat-value" id="borrowed">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Available</div>
+        <div class="stat-value" id="available">0</div>
+      </div>
+      <div style="margin-top: 16px">
+        <input
+          id="loanAmount"
+          type="number"
+          step="0.0001"
+          placeholder="Amount in ETH (e.g. 0.001)"
+          style="width: 240px"
+        />
+        <button onclick="requestLoan()">Request Loan</button>
+        <button onclick="repayLoan()" style="background: #555">Repay</button>
+      </div>
+    </div>
+
+    <div id="log"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
+    <script>
+      // ============================================================
+      // CONFIG — update after deploying
+      // ============================================================
+      const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+      const PRIVATE_KEY =
+        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+      const RPC_URL = "http://127.0.0.1:8545";
+
+      const ABI = [
+        "function register(string name)",
+        "function isRegistered(address user) view returns (bool)",
+        "function profiles(address) view returns (string name, bool registered, uint256 registeredAt)",
+        "function educationPoints(address) view returns (uint256)",
+        "function healthPoints(address) view returns (uint256)",
+        "function creditScore(address) view returns (uint256)",
+        "function loanLimit(address) view returns (uint256)",
+        "function availableCredit(address) view returns (uint256)",
+        "function totalBorrowed(address) view returns (uint256)",
+        "function issueCertificate(address student, string courseName)",
+        "function attestHealth(address patient, string kind)",
+        "function requestLoan(uint256 amount)",
+        "function repayLoan(uint256 amount)",
+        "function certificateCount(address) view returns (uint256)",
+        "function getCertificates(address) view returns (tuple(string courseName, address issuer, uint256 issuedAt)[])",
+        "function getAttestations(address) view returns (tuple(string kind, address issuer, uint256 issuedAt)[])",
+      ];
+
+      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, wallet);
+
+      function log(msg) {
+        const el = document.getElementById("log");
+        el.textContent += `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+        el.scrollTop = el.scrollHeight;
+      }
+      function setStatus(text, kind) {
+        const el = document.getElementById("status");
+        el.textContent = text;
+        el.className = kind || "";
+      }
+      function fmtETH(wei) {
+        return Number(ethers.formatEther(wei)).toFixed(4);
+      }
+
+      // ---------- register ----------
+      async function register() {
+        const name = document.getElementById("nameInput").value.trim();
+        if (!name) return alert("Enter a name");
+        try {
+          setStatus("Registering…");
+          const tx = await contract.register(name);
+          await tx.wait();
+          log(`Registered as "${name}"`);
+          setStatus("Registered ✅", "ok");
+          await refresh();
+        } catch (err) {
+          log("Register failed: " + (err.shortMessage || err.message));
+          setStatus("Register failed ❌", "err");
+        }
+      }
+
+      // ---------- education ----------
+      async function issueCertificate() {
+        const course = document.getElementById("courseInput").value.trim();
+        if (!course) return alert("Enter a course name");
+        try {
+          const tx = await contract.issueCertificate(wallet.address, course);
+          await tx.wait();
+          log(`Certificate issued: "${course}"`);
+          await refresh();
+        } catch (err) {
+          log("Certificate failed: " + (err.shortMessage || err.message));
+        }
+      }
+
+      // ---------- health ----------
+      async function attestHealth() {
+        const kind = document.getElementById("healthInput").value.trim();
+        if (!kind) return alert("Enter a kind");
+        try {
+          const tx = await contract.attestHealth(wallet.address, kind);
+          await tx.wait();
+          log(`Health attestation: "${kind}"`);
+          await refresh();
+        } catch (err) {
+          log("Attestation failed: " + (err.shortMessage || err.message));
+        }
+      }
+
+      // ---------- finance ----------
+      async function requestLoan() {
+        const eth = document.getElementById("loanAmount").value;
+        if (!eth || Number(eth) <= 0) return alert("Enter a valid amount");
+        const wei = ethers.parseEther(eth);
+        try {
+          const tx = await contract.requestLoan(wei);
+          await tx.wait();
+          log(`Loan approved: ${eth} ETH`);
+          await refresh();
+        } catch (err) {
+          log("Loan failed: " + (err.shortMessage || err.message));
+        }
+      }
+
+      async function repayLoan() {
+        const eth = document.getElementById("loanAmount").value;
+        if (!eth || Number(eth) <= 0) return alert("Enter a valid amount");
+        const wei = ethers.parseEther(eth);
+        try {
+          const tx = await contract.repayLoan(wei);
+          await tx.wait();
+          log(`Loan repaid: ${eth} ETH`);
+          await refresh();
+        } catch (err) {
+          log("Repay failed: " + (err.shortMessage || err.message));
+        }
+      }
+
+      // ---------- refresh everything ----------
+      async function refresh() {
+        const addr = wallet.address;
+        const isReg = await contract.isRegistered(addr);
+
+        if (!isReg) {
+          document.getElementById("registerCard").style.display = "block";
+          document.getElementById("profileCard").style.display = "none";
+          document.getElementById("eduCard").style.display = "none";
+          document.getElementById("healthCard").style.display = "none";
+          document.getElementById("financeCard").style.display = "none";
+          return;
+        }
+
+        // Show registered sections
+        document.getElementById("registerCard").style.display = "none";
+        document.getElementById("profileCard").style.display = "block";
+        document.getElementById("eduCard").style.display = "block";
+        document.getElementById("healthCard").style.display = "block";
+        document.getElementById("financeCard").style.display = "block";
+
+        const profile = await contract.profiles(addr);
+        const eduPts = await contract.educationPoints(addr);
+        const healthPts = await contract.healthPoints(addr);
+        const score = await contract.creditScore(addr);
+        const limit = await contract.loanLimit(addr);
+        const borrowed = await contract.totalBorrowed(addr);
+        const available = await contract.availableCredit(addr);
+
+        document.getElementById("userName").textContent = profile.name;
+        document.getElementById("eduPoints").textContent = eduPts.toString();
+        document.getElementById("healthPoints").textContent =
+          healthPts.toString();
+        document.getElementById("creditScore").textContent = score.toString();
+        document.getElementById("loanLimit").textContent = fmtETH(limit);
+        document.getElementById("borrowed").textContent = fmtETH(borrowed);
+        document.getElementById("available").textContent = fmtETH(available);
+
+        // Certificates
+        const certs = await contract.getCertificates(addr);
+        const certList = document.getElementById("certList");
+        certList.innerHTML = "";
+        certs.forEach((c) => {
+          const li = document.createElement("li");
+          li.textContent = `${c.courseName}  —  by ${c.issuer.slice(
+            0,
+            6,
+          )}… on ${new Date(Number(c.issuedAt) * 1000).toLocaleDateString()}`;
+          certList.appendChild(li);
+        });
+
+        // Attestations
+        const atts = await contract.getAttestations(addr);
+        const attList = document.getElementById("attestationList");
+        attList.innerHTML = "";
+        atts.forEach((a) => {
+          const li = document.createElement("li");
+          li.textContent = `${a.kind}  —  by ${a.issuer.slice(
+            0,
+            6,
+          )}… on ${new Date(Number(a.issuedAt) * 1000).toLocaleDateString()}`;
+          attList.appendChild(li);
+        });
+      }
+
+      // ---------- init ----------
+      (async () => {
+        try {
+          const net = await provider.getNetwork();
+          log("Connected to chain " + net.chainId);
+          setStatus("Connected ✅", "ok");
+          await refresh();
+        } catch (err) {
+          log("Connection error: " + err.message);
+          setStatus("Cannot reach node. Run `npx hardhat node`.", "err");
+        }
+      })();
+    </script>
+  </body>
+</html>

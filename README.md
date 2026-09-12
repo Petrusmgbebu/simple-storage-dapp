@@ -82,13 +82,12 @@ You'll see tests for initial state, set/get, overwrite, and a fuzz test that run
 
 MIT
 
-````
-
----
+```
 
 
-```markdown
-## 👤 Author
-**Petrus Mgbebu**
+
+
+Author
+Petrus Mgbebu
 - GitHub: [@Petrusmgbebu](https://github.com/Petrusmgbebu)
-````
+```

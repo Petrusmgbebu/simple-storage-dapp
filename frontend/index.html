@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SimpleStorage Frontend</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        max-width: 640px;
+        margin: 40px auto;
+        padding: 0 20px;
+        color: #222;
+      }
+      h1 {
+        margin-bottom: 4px;
+      }
+      .subtitle {
+        color: #666;
+        margin-top: 0;
+      }
+      .card {
+        background: #f7f9fc;
+        border: 1px solid #e1e8f0;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 16px 0;
+      }
+      .value {
+        font-size: 56px;
+        font-weight: 700;
+        color: #0066cc;
+        margin: 8px 0 16px;
+        font-variant-numeric: tabular-nums;
+      }
+      input {
+        padding: 10px 12px;
+        font-size: 16px;
+        width: 180px;
+        border: 1px solid #ccd;
+        border-radius: 6px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        margin-left: 8px;
+      }
+      button:hover {
+        background: #0055aa;
+      }
+      button:disabled {
+        background: #999;
+        cursor: wait;
+      }
+      #status {
+        padding: 10px 14px;
+        border-radius: 6px;
+        background: #fff8e1;
+        color: #7a5c00;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+      #status.ok {
+        background: #e6f7e6;
+        color: #1f6f1f;
+      }
+      #status.err {
+        background: #fdeaea;
+        color: #8a1f1f;
+      }
+      #log {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 12px;
+        background: #1a1a1a;
+        color: #7ee787;
+        padding: 12px;
+        border-radius: 6px;
+        height: 160px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+      code {
+        background: #eef;
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SimpleStorage</h1>
+    <p class="subtitle">A tiny frontend talking to your smart contract.</p>
+
+    <div id="status">Connecting…</div>
+
+    <div class="card">
+      <div style="font-size: 14px; color: #666">Current value</div>
+      <div class="value" id="currentValue">—</div>
+      <button onclick="refresh()">Refresh</button>
+    </div>
+
+    <div class="card">
+      <div style="font-size: 14px; color: #666; margin-bottom: 8px">
+        Set a new value
+      </div>
+      <input type="number" id="newValue" placeholder="e.g. 42" min="0" />
+      <button onclick="setValue()" id="setBtn">Set</button>
+    </div>
+
+    <div id="log"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
+    <script>
+      // ============================================================
+      // CONFIGURATION — edit these two lines after deploying
+      // ============================================================
+      const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+      const PRIVATE_KEY =
+        "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+      // ============================================================
+
+      const RPC_URL = "http://127.0.0.1:8545";
+
+      // Minimal ABI — just the two functions our contract has.
+      const ABI = [
+        "function get() view returns (uint256)",
+        "function set(uint256 x)",
+      ];
+
+      // Set up ethers: a provider (read-only connection) and a wallet (can sign)
+      const provider = new ethers.JsonRpcProvider(RPC_URL);
+      const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, wallet);
+
+      // ---------- helpers ----------
+      function log(msg) {
+        const el = document.getElementById("log");
+        const time = new Date().toLocaleTimeString();
+        el.textContent += `[${time}] ${msg}\n`;
+        el.scrollTop = el.scrollHeight;
+      }
+
+      function setStatus(text, kind) {
+        const el = document.getElementById("status");
+        el.textContent = text;
+        el.className = kind || "";
+      }
+
+      // ---------- read ----------
+      async function refresh() {
+        try {
+          const value = await contract.get();
+          document.getElementById("currentValue").textContent =
+            value.toString();
+          log("GET → " + value.toString());
+        } catch (err) {
+          log("GET failed: " + (err.shortMessage || err.message));
+          setStatus("Could not read contract. Is the node running?", "err");
+        }
+      }
+
+      // ---------- write ----------
+      async function setValue() {
+        const input = document.getElementById("newValue");
+        const raw = input.value;
+        if (raw === "" || Number(raw) < 0) {
+          alert("Please enter a number (0 or higher).");
+          return;
+        }
+
+        const btn = document.getElementById("setBtn");
+        btn.disabled = true;
+        setStatus("Sending transaction…");
+
+        try {
+          log(`SET(${raw}) — sending transaction…`);
+          const tx = await contract.set(raw);
+          log("Transaction hash: " + tx.hash);
+          setStatus("Waiting for confirmation…");
+
+          await tx.wait();
+          log("Transaction confirmed ✅");
+          setStatus("Confirmed ✅", "ok");
+
+          await refresh();
+        } catch (err) {
+          log("SET failed: " + (err.shortMessage || err.message));
+          setStatus("Transaction failed ❌", "err");
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // ---------- init ----------
+      (async () => {
+        try {
+          const net = await provider.getNetwork();
+          log("Connected to chain ID " + net.chainId);
+          setStatus("Connected ✅", "ok");
+          await refresh();
+        } catch (err) {
+          log("Connection failed: " + err.message);
+          setStatus(
+            "Can't reach the node. Run `npx hardhat node` first.",
+            "err",
+          );
+        }
+      })();
+    </script>
+  </body>
+</html>
